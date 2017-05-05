@@ -19,9 +19,9 @@ const createDungeon = () => {
 
   //1 : Grid of empty cells
   var grid = [];
-  for (var i = 0; i < c.GRID_HEIGHT; i++) {
+  for (var i = 0; i < c.GRID_WIDTH; i++) {
     grid.push([]);
-    for (var j = 0; j < c.GRID_WIDTH; j++) {
+    for (var j = 0; j < c.GRID_HEIGHT; j++) {
       grid[i].push({ type: 'o' });
     }
   }
@@ -32,25 +32,17 @@ const createDungeon = () => {
   const firstRoom = {
     x: _.random(1, c.GRID_WIDTH - max - 15),
     y: _.random(1, c.GRID_HEIGHT - max - 15),
-    height: _.random(min, max),
     width: _.random(min, max),
-    id: 'O'
+    height: _.random(min, max)
   };
 
   //3 : Place the first room on to grid
 
-  const placeCells = (grid, {
-    x,
-    y,
-    width = 1,
-    height = 1,
-    id
-  }, type = 'f') => {
-    for (var i = y; i < y + height; i++) {
-      for (var j = x; j < x + width; j++) {
+  const placeCells = (grid, { x, y, width = 1, height = 1 }, type = 'f') => {
+    for (var i = x; i < x + width; i++) {
+      for (var j = y; j < y + height; j++) {
         grid[i][j] = {
-          type,
-          id
+          type
         };
       }
     }
@@ -59,24 +51,19 @@ const createDungeon = () => {
 
   //Check for valid room placement
 
-  const isValidRoomPlacement = (grid, {
-    x,
-    y,
-    width = 1,
-    height = 1
-  }) => {
+  const isValidRoomPlacement = (grid, { x, y, width = 1, height = 1 }) => {
 
     //check if room is on the edge of the grid or outside the world
-    if (y < 1 || y + height > grid.length - 1) {
+    if (x < 1 || x + width > grid.length - 1) {
       return false;
     }
-    if (x < 1 || x + width > grid[0].length - 1) {
+    if (y < 1 || y + height > grid[0].length - 1) {
       return false;
     }
 
     //go from y-1 to y+height+1 and check if they are already any floors
-    for (var i = y - 1; i < y + height + 1; i++) {
-      for (var j = x - 1; j < x + width + 1; j++) {
+    for (var i = x - 1; i < x + width + 1; i++) {
+      for (var j = y - 1; j < y + height + 1; j++) {
         if (grid[i][j].type === 'f') {
           return false;
         }
@@ -85,16 +72,10 @@ const createDungeon = () => {
     return true;
   };
 
-  const createRoomFromSeed = (grid, {
-    x,
-    y,
-    width,
-    height
-  }, range = c.ROOM_SIZE_RANGE) => {
+  const createRoomFromSeed = (grid, { x, y, width, height }, range = c.ROOM_SIZE_RANGE) => {
 
     //range for generating the random room heights and widths
-    const [min,
-      max] = range;
+    const [min, max] = range;
 
     //generate room values for each edge of the seed room
     var roomValues = [];
@@ -107,7 +88,6 @@ const createDungeon = () => {
     north.y = y - north.height - 1;
     north.doorx = _.random(north.x, (Math.min(north.x + north.width, x + width)) - 1);
     north.doory = y - 1;
-    north.id = 'N';
     roomValues.push(north);
 
     const east = {
@@ -118,7 +98,6 @@ const createDungeon = () => {
     east.y = _.random(y, y + height - 1);
     east.doorx = east.x - 1;
     east.doory = _.random(east.y, Math.min(east.y + east.height, y + height) - 1);
-    east.id = 'E';
     roomValues.push(east);
 
     const south = {
@@ -129,7 +108,6 @@ const createDungeon = () => {
     south.y = y + height + 1;
     south.doorx = _.random(south.x, Math.min(south.x + south.width, x + width) - 1);
     south.doory = y + height;
-    south.id = 'S';
     roomValues.push(south);
 
     const west = {
@@ -140,7 +118,6 @@ const createDungeon = () => {
     west.y = _.random(y, y + height - 1);
     west.doorx = x - 1;
     west.doory = _.random(west.y, Math.min(west.y + west.height, y + height) - 1);
-    west.id = 'W';
     roomValues.push(west);
 
     const placedRooms = [];
@@ -150,10 +127,7 @@ const createDungeon = () => {
         roomdata.push(room);
         grid = placeCells(grid, room);
         //place door
-        grid = placeCells(grid, {
-          x: room.doorx,
-          y: room.doory
-        }, 'd');
+        grid = placeCells(grid, { x: room.doorx, y: room.doory }, 'd');
         placedRooms.push(room);
       }
     });
@@ -187,51 +161,30 @@ var g = createDungeon();
 // roomdata = roomdata.filter((room, index, self) => (index ===
 // self.indexOf(room) ));
 
-var firstroomcell = _.min(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
-var lastroomcell = _.min(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
-var firstroom = roomdata.filter(room => (room.x * c.GRID_WIDTH) + room.y == firstroomcell);
+const firstroomcell = _.min(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
+const lastroomcell = _.max(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
+const firstroom = roomdata.filter(room => (room.x * c.GRID_WIDTH) + room.y === firstroomcell)[0];
+const lastroom = roomdata.filter(room => (room.x * c.GRID_WIDTH) + room.y === lastroomcell)[0];
 
-console.log(firstroom);
 
-
-var minx = 0;
-var miny = 0;
-var maxx = 0;
-var maxy = 0;
-
-for (var i = 0; i < c.GRID_HEIGHT; i++) {
-  for (var j = 0; j < c.GRID_WIDTH; j++) {
-    if (minx === 0) {
-      if (g[i][j].type === 'f') {
-        minx = i;
-        miny = j;
+const spawnElements = (g) => {
+  var herox = _.random(firstroom.x + 1, firstroom.x + firstroom.width - 2);
+  var heroy = _.random(firstroom.y + 1, firstroom.y + firstroom.height - 2);
+  var bossx = _.random(lastroom.x + 1, lastroom.x + lastroom.width - 2);
+  var bossy = _.random(lastroom.y + 1, lastroom.y + lastroom.height - 2);
+  for (var i = 0; i < c.GRID_WIDTH; i++) {
+    for (var j = 0; j < c.GRID_HEIGHT; j++) {
+      if (i === herox && j === heroy) {
+        g[i][j].type = 'h';
       }
-    }
-    document
-      .querySelector('.all')
-      .innerHTML = document
-        .querySelector('.all')
-        .innerHTML + g[i][j].type;
-  }
-  document
-    .querySelector('.all')
-    .innerHTML = document
-      .querySelector('.all')
-      .innerHTML + '<br>';
-};
-
-for (i = c.GRID_HEIGHT - 1; i >= 0; i--) {
-  for (j = c.GRID_WIDTH - 1; j >= 0; j--) {
-    if (maxx === 0) {
-      if (g[i][j].type === 'f') {
-        maxx = i;
-        maxy = j;
+      if (i === bossx && j === bossy) {
+        g[i][j].type = 'b';
       }
     }
   }
-};
+  return g;
+}
 
-// console.log(minx, miny);
-// console.log(maxx, maxy);
+g = spawnElements(g);
 
 module.exports = g;
