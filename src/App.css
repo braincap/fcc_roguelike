@@ -1,6 +1,7 @@
 * {
   margin: 0;
   padding: 0;
+  color: white;
   font-family: monospace;
   box-sizing: border-box;
 }
@@ -10,7 +11,8 @@ html {
   height: 100vh;
   display: flex;
   justify-content: center;
-  /*align-items: center;*/
+  align-items: center;
+  background-color: slategray
 }
 
 .board {
@@ -29,7 +31,21 @@ html {
   padding: 0;
   display: inline-block;
   background-color: darkgrey;
-  border: 0.1px solid lightslategrey;
+}
+
+.stats {
+  width: 100vw;
+  display: flex;
+  margin-top: 10px;
+  justify-content: space-around;
+  align-items: top;
+}
+
+ul {
+  list-style: none;
+  text-align: center;
+  padding: 10px;
+  border: 1px solid whitesmoke;
 }
 
 .o {
@@ -50,4 +66,32 @@ html {
 
 .b {
   background-color: red;
+  border: 3px dotted darkred;
+}
+
+.w {
+  background-color: salmon;
+}
+
+.e {
+  background-color: red
+}
+
+.l {
+  background: -moz-radial-gradient(center, ellipse cover, rgba(0, 128, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  /* ff3.6+ */
+  background: -webkit-radial-gradient(center, ellipse cover, rgba(0, 128, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  /* safari5.1+,chrome10+ */
+  background: -o-radial-gradient(center, ellipse cover, rgba(0, 128, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  /* opera 11.10+ */
+  background: -ms-radial-gradient(center, ellipse cover, rgba(0, 128, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  /* ie10+ */
+  background: radial-gradient(ellipse at center, rgba(0, 128, 0, 1) 0%, rgba(0, 0, 0, 1) 100%);
+  /* w3c */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008000', endColorstr='#000000', GradientType=1);
+  /* ie6-9 */
+}
+
+.f.y {
+  background-color: white;
 }

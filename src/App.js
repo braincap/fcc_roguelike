@@ -1,29 +1,33 @@
 import './App.css';
 var g = require('./map');
 import React, { Component } from 'react';
+var _ = require('lodash');
 
 //eslint-disable-next-line
 var elements = {
   weapon: [
-    { name: 'Brass knuckles', strength: 5, x: null, y: null },
-    { name: 'Knife', strength: 8, x: null, y: null },
-    { name: 'Sword', strength: 15, x: null, y: null },
-    { name: 'Mace', strength: 20, x: null, y: null },
-    { name: 'Axe', strength: 25, x: null, y: null },
+    { name: 'Brass knuckles', strength: 5 },
+    { name: 'Knife', strength: 8 },
+    { name: 'Sword', strength: 15 },
+    { name: 'Mace', strength: 20 },
+    { name: 'Axe', strength: 30 },
   ],
-  hero: { x: null, y: null, life: 100 },
-  boss: { x: null, y: null, life: 200 }
-}
+  enemies: [
+    _.random(30, 60),
+    _.random(30, 60),
+    _.random(30, 60),
+    _.random(30, 60),
+    _.random(30, 60)
+  ]
+};
+
+var heroX, heroY = null;
 
 for (var i = 0; i < g.length; i++) {
   for (var j = 0; j < g[0].length; j++) {
     if (g[i][j].type === 'h') {
-      elements.hero.x = i;
-      elements.hero.y = j;
-    }
-    if (g[i][j].type === 'b') {
-      elements.boss.x = i;
-      elements.boss.y = j;
+      heroX = i;
+      heroY = j;
     }
   }
 }
@@ -34,23 +38,39 @@ var Cell = (props) => <div className={props.className}></div>
 class App extends Component {
   constructor(props) {
     super(props);
-    this.mapArrayDivs;
     this.state = {
       prevTile: 'f',
       mapArray: g,
-      hero: elements.hero,
-      boss: elements.boss
+      heroX: heroX,
+      heroY: heroY,
+      heroLife: 100,
+      heroXp: 0,
+      heroLevel: 1,
+      heroStrength: 10,
+      heroWeapon: null,
+      bossX: null,
+      bossY: null,
+      bossLife: 200,
+      enemyLife: elements.enemies,
+      enemyActive: null
     };
+    this.mapArrayDivs = this.generateDivArray(this.state.mapArray);
+  }
+
+  heroTotalStrength() {
+    return this.state.heroWeapon ? (this.state.heroLevel * this.state.heroStrength) + elements.weapon[this.state.heroWeapon].strength : (this.state.heroLevel * this.state.heroStrength);
   }
 
   generateDivArray(mapArray) {
     var mapArrayDivs = [];
+    console.log(this.state.heroX, this.state.heroY);
     for (var i = 0; i < mapArray.length; i++) {
       for (var j = 0; j < mapArray[0].length; j++) {
+        var visible = i > this.state.heroX - 2 && i < this.state.heroX + 2 && j > this.state.heroY - 2 && j < this.state.heroY + 2;
         mapArrayDivs.push(
           <Cell
             key={(i * mapArray.length) + j}
-            className={'cell ' + mapArray[i][j].type}
+            className={'cell ' + mapArray[i][j].type + ' ' + ((visible) ? 'y' : 'n')}
             x={i} y={j}>
           </Cell >
         );
@@ -61,112 +81,147 @@ class App extends Component {
 
 
   bossfight = () => {
-    console.log('a');
+    var newBossLife = this.state.bossLife - this.heroTotalStrength();
+    var newHeroLife = this.state.heroLife - 50;
 
-    var newMapArray = this.state.mapArray;
-
-    var currBoss = this.state.boss;
-    var newBossX = currBoss.x;
-    var newBossY = currBoss.y;
-    var newBossLife = currBoss.life -= 100;
-    var newBoss = { x: newBossX, y: newBossY, life: newBossLife };
-
-    var currHero = this.state.hero;
-    var newHeroX = currHero.x;
-    var newHeroY = currHero.y;
-    var newHeroLife = currHero.life -= 50;
-    var newHero = { x: newHeroX, y: newHeroY, life: newHeroLife };
-
-    if (newBossLife <= 0) {
-      // newMapArray[newBossX][newBossY].type === 'f';
-      // this.setState({ mapArray: newMapArray, mapArrayDivs: this.generateDivArray(newMapArray) });
-      alert("You Won!");
-      location.reload();
-    }
     if (newHeroLife <= 0) {
-      // newMapArray[newHeroX][newHeroY].type === 'f';
-      // this.setState({ mapArray: newMapArray, mapArrayDivs: this.generateDivArray(newMapArray) });
       alert("You Lost!");
       location.reload();
+      return;
     }
 
-    this.setState({ boss: newBoss, hero: newHero });
+    if (newBossLife <= 0) {
+      alert("You Won!");
+      location.reload();
+      return;
+    }
+    this.setState({ bossLife: newBossLife, heroLife: newHeroLife });
+  }
+
+  pickWeapon = (weaponindex) => {
+    this.setState({ heroWeapon: weaponindex });
+  }
+
+  pickHealth = (healthindex) => {
+    this.setState({ heroLife: this.state.heroLife + 50 });
+  }
+
+  fightEnemy = (enemyindex, enemyX, enemyY) => {
+    var newEnemyLife = this.state.enemyLife[enemyindex] - this.heroTotalStrength();
+    var newEnemyLifeArr = this.state.enemyLife;
+    newEnemyLifeArr[enemyindex] = newEnemyLife <= 0 ? 0 : newEnemyLife;
+    var newHeroLife = this.state.heroLife - 20;
+
+    if (newHeroLife <= 0) {
+      alert("You Lost!");
+      location.reload();
+      return;
+    }
+
+    if (newEnemyLife <= 0) {
+      console.log('Enemy defeated!');
+      this.setState({ heroXp: this.state.heroXp + 50 });
+      var newMapArray = this.state.mapArray;
+      newMapArray[enemyX][enemyY].type = 'f';
+      this.mapArrayDivs = this.generateDivArray(newMapArray);
+    }
+
+    if (this.state.heroXp >= 100) {
+      this.setState({ heroLevel: this.state.heroLevel + 1, heroXp: 0 });
+    }
+
+    this.setState({ heroLife: newHeroLife, enemyLife: newEnemyLifeArr, enemyActive: newEnemyLife <= 0 ? null : enemyindex });
   }
 
   componentDidMount() {
-    this.mapArrayDivs({ mapArrayDivs: this.generateDivArray(this.state.mapArray) });
 
     document.body.addEventListener('keydown', (e) => {
 
-      var currHeroX = this.state.hero.x;
-      var currHeroY = this.state.hero.y;
-      var currHeroLife = this.state.hero.life;
-      var currMapArray = this.state.mapArray;
-      var newMapArray = currMapArray;
+      var currHeroX = this.state.heroX;
+      var currHeroY = this.state.heroY;
+      var newMapArray = this.state.mapArray;
       var prevTile = this.state.prevTile;
+      var targetType = 'f';
 
       switch (e.keyCode) {
         case 37: {
-          if (currMapArray[currHeroX][currHeroY - 1].type === 'o') break;
-          if (currMapArray[currHeroX][currHeroY - 1].type === 'b') { this.bossfight(); break; }
-          newMapArray[currHeroX][currHeroY].type = prevTile;
-          prevTile = newMapArray[currHeroX][currHeroY - 1].type;
-          newMapArray[currHeroX][currHeroY - 1].type = 'h';
-          var newMapArrayDiv = this.generateDivArray(currMapArray);
+          targetType = newMapArray[currHeroX][currHeroY - 1].type;
 
+          if (targetType === 'o') break;
+          if (targetType.slice(0, 1) === 'e') { this.fightEnemy(targetType.slice(3, 4), currHeroX, currHeroY - 1); break; }
+          if (targetType === 'b') { this.bossfight(); break; }
+
+          newMapArray[currHeroX][currHeroY].type = prevTile;
+          prevTile = (targetType === 'd') ? 'd' : 'f';
+          newMapArray[currHeroX][currHeroY - 1].type = 'h';
+          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
-            hero: { x: currHeroX, y: currHeroY - 1, life: currHeroLife },
+            heroY: currHeroY - 1,
             mapArray: newMapArray,
-            mapArrayDivs: newMapArrayDiv,
             prevTile: prevTile
           });
+          if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
+          if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
         }
         case 38: {
-          if (currMapArray[currHeroX - 1][currHeroY].type === 'o') break;
-          if (currMapArray[currHeroX - 1][currHeroY].type === 'b') { this.bossfight(); break; }
-          newMapArray[currHeroX][currHeroY].type = prevTile;
-          prevTile = newMapArray[currHeroX - 1][currHeroY].type;
-          newMapArray[currHeroX - 1][currHeroY].type = 'h';
-          newMapArrayDiv = this.generateDivArray(currMapArray);
+          targetType = newMapArray[currHeroX - 1][currHeroY].type;
 
+          if (targetType === 'o') break;
+          if (targetType.slice(0, 1) === 'e') { this.fightEnemy(targetType.slice(3, 4), currHeroX - 1, currHeroY); break; }
+          if (targetType === 'b') { this.bossfight(); break; }
+
+          newMapArray[currHeroX][currHeroY].type = prevTile;
+          prevTile = (targetType === 'd') ? 'd' : 'f';
+          newMapArray[currHeroX - 1][currHeroY].type = 'h';
+          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
-            hero: { x: currHeroX - 1, y: currHeroY, life: currHeroLife },
+            heroX: currHeroX - 1,
             mapArray: newMapArray,
-            mapArrayDivs: newMapArrayDiv,
             prevTile: prevTile
           });
+          if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
+          if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
         }
         case 39: {
-          if (currMapArray[currHeroX][currHeroY + 1].type === 'o') break;
-          if (currMapArray[currHeroX][currHeroY + 1].type === 'b') { this.bossfight(); break; }
+          targetType = newMapArray[currHeroX][currHeroY + 1].type;
+
+          if (targetType === 'o') break;
+          if (targetType.slice(0, 1) === 'e') { this.fightEnemy(targetType.slice(3, 4), currHeroX, currHeroY + 1); break; }
+          if (targetType === 'b') { this.bossfight(); break; }
+
           newMapArray[currHeroX][currHeroY].type = prevTile;
-          prevTile = newMapArray[currHeroX][currHeroY + 1].type;
+          prevTile = (targetType === 'd') ? 'd' : 'f';
           newMapArray[currHeroX][currHeroY + 1].type = 'h';
-          newMapArrayDiv = this.generateDivArray(currMapArray);
+          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
-            hero: { x: currHeroX, y: currHeroY + 1, life: currHeroLife },
+            heroY: currHeroY + 1,
             mapArray: newMapArray,
-            mapArrayDivs: newMapArrayDiv,
             prevTile: prevTile
           });
+          if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
+          if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
         }
         case 40: {
-          if (currMapArray[currHeroX + 1][currHeroY].type === 'o') break;
-          if (currMapArray[currHeroX + 1][currHeroY].type === 'b') { this.bossfight(); break; }
-          newMapArray[currHeroX][currHeroY].type = prevTile;
-          prevTile = newMapArray[currHeroX + 1][currHeroY].type;
-          newMapArray[currHeroX + 1][currHeroY].type = 'h';
-          newMapArrayDiv = this.generateDivArray(currMapArray);
+          targetType = newMapArray[currHeroX + 1][currHeroY].type;
 
+          if (targetType === 'o') break;
+          if (targetType.slice(0, 1) === 'e') { this.fightEnemy(targetType.slice(3, 4), currHeroX + 1, currHeroY); break; }
+          if (targetType === 'b') { this.bossfight(); break; }
+
+          newMapArray[currHeroX][currHeroY].type = prevTile;
+          prevTile = (targetType === 'd') ? 'd' : 'f';
+          newMapArray[currHeroX + 1][currHeroY].type = 'h';
+          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
-            hero: { x: currHeroX + 1, y: currHeroY, life: currHeroLife },
+            heroX: currHeroX + 1,
             mapArray: newMapArray,
-            mapArrayDivs: newMapArrayDiv,
             prevTile: prevTile
           });
+          if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
+          if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
         }
         default: break;
@@ -177,7 +232,27 @@ class App extends Component {
   render() {
     return (
       <div className='board'>
-        {this.state.mapArrayDivs}
+        {this.mapArrayDivs}
+        <div className='stats'>
+          <ul>
+            <li className='cell h'></li>
+            <li><h3>Player</h3></li>
+            <li>Life: {this.state.heroLife}</li>
+            <li>Weapon: {this.state.heroWeapon ? elements.weapon[this.state.heroWeapon].name : 'Bare hands'}</li>
+            <li>Weapon strength: {this.state.heroWeapon ? elements.weapon[this.state.heroWeapon].strength : 0}</li>
+            <li>Total strength: {this.heroTotalStrength()}</li>
+          </ul>
+          <ul>
+            <li className='cell e'></li>
+            <li><h3>Enemy</h3></li>
+            <li>Life: {this.state.enemyActive ? elements.enemies[this.state.enemyActive] : 'Fight to see'}</li>
+          </ul>
+          <ul>
+            <li className='cell b'></li>
+            <li><h3>Boss</h3></li>
+            <li>Life: {this.state.bossLife}</li>
+          </ul>
+        </div>
       </div>
     );
   }

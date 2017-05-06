@@ -158,8 +158,6 @@ const createDungeon = () => {
 }
 
 var g = createDungeon();
-// roomdata = roomdata.filter((room, index, self) => (index ===
-// self.indexOf(room) ));
 
 const firstroomcell = _.min(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
 const lastroomcell = _.max(roomdata.map(room => +((room.x * c.GRID_WIDTH) + room.y)));
@@ -167,24 +165,32 @@ const firstroom = roomdata.filter(room => (room.x * c.GRID_WIDTH) + room.y === f
 const lastroom = roomdata.filter(room => (room.x * c.GRID_WIDTH) + room.y === lastroomcell)[0];
 
 
-const spawnElements = (g) => {
-  var herox = _.random(firstroom.x + 1, firstroom.x + firstroom.width - 2);
-  var heroy = _.random(firstroom.y + 1, firstroom.y + firstroom.height - 2);
-  var bossx = _.random(lastroom.x + 1, lastroom.x + lastroom.width - 2);
-  var bossy = _.random(lastroom.y + 1, lastroom.y + lastroom.height - 2);
-  for (var i = 0; i < c.GRID_WIDTH; i++) {
-    for (var j = 0; j < c.GRID_HEIGHT; j++) {
-      if (i === herox && j === heroy) {
-        g[i][j].type = 'h';
-      }
-      if (i === bossx && j === bossy) {
-        g[i][j].type = 'b';
-      }
-    }
+const spawnMultipleElements = (g) => {
+  for (var i = 0; i < roomdata.length && i <= 4; i++) {
+    var weaponx = _.random(roomdata[i].x + 1, roomdata[i].x + roomdata[i].width - 2);
+    var weapony = _.random(roomdata[i].y + 1, roomdata[i].y + roomdata[i].height - 2);
+    var enemyx = _.random(roomdata[i].x + 1, roomdata[i].x + roomdata[i].width - 2);
+    var enemyy = _.random(roomdata[i].y + 1, roomdata[i].y + roomdata[i].height - 2);
+    var lifex = _.random(roomdata[i].x + 1, roomdata[i].x + roomdata[i].width - 2);
+    var lifey = _.random(roomdata[i].y + 1, roomdata[i].y + roomdata[i].height - 2);
+    g[weaponx][weapony].type = 'w w' + i;
+    g[enemyx][enemyy].type = 'e e' + i;
+    g[lifex][lifey].type = 'l l' + i;
   }
   return g;
 }
 
-g = spawnElements(g);
+const spawnSingleElements = (g) => {
+  var herox = _.random(firstroom.x + 1, firstroom.x + firstroom.width - 2);
+  var heroy = _.random(firstroom.y + 1, firstroom.y + firstroom.height - 2);
+  var bossx = _.random(lastroom.x + 1, lastroom.x + lastroom.width - 2);
+  var bossy = _.random(lastroom.y + 1, lastroom.y + lastroom.height - 2);
+  g[herox][heroy].type = 'h';
+  g[bossx][bossy].type = 'b';
+  return g;
+}
+
+g = spawnMultipleElements(g);
+g = spawnSingleElements(g);
 
 module.exports = g;
