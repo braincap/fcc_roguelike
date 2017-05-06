@@ -4,7 +4,7 @@ var _ = require('lodash');
 const GRID_HEIGHT = 40;
 const GRID_WIDTH = 40;
 const MAX_ROOMS = 15;
-const ROOM_SIZE_RANGE = [7, 12];
+const ROOM_SIZE_RANGE = [9, 12];
 
 const c = {
   GRID_HEIGHT,
@@ -41,9 +41,7 @@ const createDungeon = () => {
   const placeCells = (grid, { x, y, width = 1, height = 1 }, type = 'f') => {
     for (var i = x; i < x + width; i++) {
       for (var j = y; j < y + height; j++) {
-        grid[i][j] = {
-          type
-        };
+        grid[i][j] = { type };
       }
     }
     return grid;

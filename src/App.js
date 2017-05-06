@@ -13,11 +13,11 @@ var elements = {
     { name: 'Axe', strength: 30 },
   ],
   enemies: [
-    _.random(30, 60),
-    _.random(30, 60),
-    _.random(30, 60),
-    _.random(30, 60),
-    _.random(30, 60)
+    _.random(30, 70),
+    _.random(30, 70),
+    _.random(30, 70),
+    _.random(30, 70),
+    _.random(30, 70)
   ]
 };
 
@@ -41,6 +41,7 @@ class App extends Component {
     this.state = {
       prevTile: 'f',
       mapArray: g,
+      mapArrayDivs: null,
       heroX: heroX,
       heroY: heroY,
       heroLife: 100,
@@ -54,23 +55,27 @@ class App extends Component {
       enemyLife: elements.enemies,
       enemyActive: null
     };
-    this.mapArrayDivs = this.generateDivArray(this.state.mapArray);
   }
 
   heroTotalStrength() {
-    return this.state.heroWeapon ? (this.state.heroLevel * this.state.heroStrength) + elements.weapon[this.state.heroWeapon].strength : (this.state.heroLevel * this.state.heroStrength);
+    return this.state.heroWeapon ? ((this.state.heroLevel * 1.5) * this.state.heroStrength) + elements.weapon[this.state.heroWeapon].strength : (this.state.heroLevel * this.state.heroStrength);
   }
 
   generateDivArray(mapArray) {
     var mapArrayDivs = [];
-    console.log(this.state.heroX, this.state.heroY);
     for (var i = 0; i < mapArray.length; i++) {
       for (var j = 0; j < mapArray[0].length; j++) {
-        var visible = i > this.state.heroX - 2 && i < this.state.heroX + 2 && j > this.state.heroY - 2 && j < this.state.heroY + 2;
+        var visible = 'n';
+        var visible = (
+          i > this.state.heroX - 4 &&
+          i < this.state.heroX + 4 &&
+          j > this.state.heroY - 4 &&
+          j < this.state.heroY + 4
+        ) ? 'y' : 'n';
         mapArrayDivs.push(
           <Cell
             key={(i * mapArray.length) + j}
-            className={'cell ' + mapArray[i][j].type + ' ' + ((visible) ? 'y' : 'n')}
+            className={'cell ' + mapArray[i][j].type + ' ' + visible}
             x={i} y={j}>
           </Cell >
         );
@@ -119,11 +124,10 @@ class App extends Component {
     }
 
     if (newEnemyLife <= 0) {
-      console.log('Enemy defeated!');
       this.setState({ heroXp: this.state.heroXp + 50 });
       var newMapArray = this.state.mapArray;
       newMapArray[enemyX][enemyY].type = 'f';
-      this.mapArrayDivs = this.generateDivArray(newMapArray);
+      this.setState({ mapArrayDivs: this.generateDivArray(newMapArray) });
     }
 
     if (this.state.heroXp >= 100) {
@@ -134,6 +138,8 @@ class App extends Component {
   }
 
   componentDidMount() {
+
+    this.setState({ mapArrayDivs: this.generateDivArray(this.state.mapArray) });
 
     document.body.addEventListener('keydown', (e) => {
 
@@ -154,12 +160,12 @@ class App extends Component {
           newMapArray[currHeroX][currHeroY].type = prevTile;
           prevTile = (targetType === 'd') ? 'd' : 'f';
           newMapArray[currHeroX][currHeroY - 1].type = 'h';
-          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
             heroY: currHeroY - 1,
             mapArray: newMapArray,
             prevTile: prevTile
           });
+          this.setState({ mapArrayDivs: this.generateDivArray(newMapArray) });
           if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
           if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
@@ -174,12 +180,12 @@ class App extends Component {
           newMapArray[currHeroX][currHeroY].type = prevTile;
           prevTile = (targetType === 'd') ? 'd' : 'f';
           newMapArray[currHeroX - 1][currHeroY].type = 'h';
-          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
             heroX: currHeroX - 1,
             mapArray: newMapArray,
             prevTile: prevTile
           });
+          this.setState({ mapArrayDivs: this.generateDivArray(newMapArray) });
           if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
           if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
@@ -194,12 +200,12 @@ class App extends Component {
           newMapArray[currHeroX][currHeroY].type = prevTile;
           prevTile = (targetType === 'd') ? 'd' : 'f';
           newMapArray[currHeroX][currHeroY + 1].type = 'h';
-          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
             heroY: currHeroY + 1,
             mapArray: newMapArray,
             prevTile: prevTile
           });
+          this.setState({ mapArrayDivs: this.generateDivArray(newMapArray) });
           if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
           if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
@@ -214,12 +220,12 @@ class App extends Component {
           newMapArray[currHeroX][currHeroY].type = prevTile;
           prevTile = (targetType === 'd') ? 'd' : 'f';
           newMapArray[currHeroX + 1][currHeroY].type = 'h';
-          this.mapArrayDivs = this.generateDivArray(newMapArray);
           this.setState({
             heroX: currHeroX + 1,
             mapArray: newMapArray,
             prevTile: prevTile
           });
+          this.setState({ mapArrayDivs: this.generateDivArray(newMapArray) });
           if (targetType.slice(0, 1) === 'w') { this.pickWeapon(targetType.slice(3, 4)); break; }
           if (targetType.slice(0, 1) === 'l') { this.pickHealth(targetType.slice(3, 4)); break; }
           break;
@@ -232,7 +238,7 @@ class App extends Component {
   render() {
     return (
       <div className='board'>
-        {this.mapArrayDivs}
+        {this.state.mapArrayDivs}
         <div className='stats'>
           <ul>
             <li className='cell h'></li>

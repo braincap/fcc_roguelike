@@ -92,6 +92,8 @@ ul {
   /* ie6-9 */
 }
 
-.f.y {
-  background-color: white;
+.n:not(.o) {
+  background: none;
+  background-color: black;
+  border: 0;
 }
